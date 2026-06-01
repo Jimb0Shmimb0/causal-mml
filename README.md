@@ -9,3 +9,11 @@ Score based learning is an approach used to learn a Bayesian/Causal network give
 
 ### K2 metric
 
+The K2 metric and algorithm developed by Cooper and Herskovits in 1991 is a score based learning method which utilises a Bayesian approach for structural learning. The goal of the algorithm is to find a graph, $G$ which maximises $P(G|D)$, where $D$ is a dataset. Using Bayes' theorm, this is the same as maximising $P(G,D)$.
+```math
+\begin{align}
+P(G|D) &= \frac{P(D|G)P(G)}{P(D)} \
+&= \frac{P(G,D)}{P(D)} \
+&= \beta P(G,D)
+\end{align}
+```
