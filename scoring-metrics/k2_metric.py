@@ -8,19 +8,19 @@ import bnlearn as bn
 DATASET_PATH = "sachs/sachs.2005.discrete.txt"
 dataset = pd.read_csv(Path(__file__).parent.parent / "./data/" / DATASET_PATH, sep="\t")
 
-# Fix variable naming inconsistencies
+# Preprocessing for this particular dataset: Fix variable naming inconsistencies
 dataset.rename(columns=str.capitalize, inplace=True)
 dataset.rename(columns={'Plc': 'Plcg'}, inplace=True)
 
-def num_dags(n: int) -> int:
+def _num_dags(n: int) -> int:
     """
     Recursive formula for the number of possible DAGs that can be produced from n variables
     :param n: number of variables/nodes
     :return: number of possible DAGS
     """
-    if n == 0:
+    if n == 0 or n == 1:
         return 1
-    return sum(((-1)**(k + 1)) * comb(n, k) * (2 ** (k * (n - k))) * num_dags(n - k) for k in range(1, n + 1))
+    return sum(((-1)**(k + 1)) * comb(n, k) * (2 ** (k * (n - k))) * _num_dags(n - k) for k in range(1, n + 1))
 
 def _arity(var: str) -> int:
     """
@@ -53,14 +53,20 @@ def _k2_node_score(var: str, parents: list[str], dataset: pd.DataFrame) -> float
     """
     si = _arity(var)
     log_score = 0.0
+
+    # Group the dataset by the parents of the variable.
     groups = dataset.groupby(parents) if parents else [(None, dataset)]
     for _, group in groups:
-        print(group)
-        Sij = len(group)
+        # print(group)
+        Sij = len(group) # Number of instances where parents take on a particular parent instantiation
+        # gamma(x + 1) = x!
         log_score += gammaln(si) - gammaln(Sij + si)
+        # Go through each value that the variable can take on
         for val in dataset[var].unique():
-            Nijk = (group[var] == val).sum()
-            log_score += gammaln(Nijk + 1)
+            # Count the number of observations that the variable in question takes on a particular value and
+            # the variables parents take on a particular instantiation
+            alpha_ijk = (group[var] == val).sum()
+            log_score += gammaln(alpha_ijk + 1)
     return log_score
 
 def k2_metric(model: dict, data: pd.DataFrame) -> float:
@@ -72,15 +78,16 @@ def k2_metric(model: dict, data: pd.DataFrame) -> float:
     :return: The K2 log metric
     """
     adjmat = model["adjmat"]
-    return log(1 / num_dags(len(data.columns))) + sum(
+    return log(1 / _num_dags(len(data.columns))) + sum(
         _k2_node_score(var, _get_parents(adjmat, var), dataset)
         for var in dataset.columns
     )
 
 if __name__ == "__main__":
+    # Import a pre-existing model
     model = bn.import_DAG('sachs')
 
-    # Fix variable naming inconsistencies
+    # Preprocessing for this particular dataset: Fix variable naming inconsistencies
     model["adjmat"].columns = model["adjmat"].columns.str.capitalize()
     model["adjmat"].index = model["adjmat"].index.str.capitalize()
     print(k2_metric(model, dataset))
