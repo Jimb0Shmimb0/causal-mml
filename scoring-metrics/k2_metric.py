@@ -18,9 +18,9 @@ def num_dags(n: int) -> int:
     :param n: number of variables/nodes
     :return: number of possible DAGS
     """
-    if n == 1:
+    if n == 0:
         return 1
-    return sum(((-1)**(k + 1)) * comb(n, k) * (2 ** (k * (n - k))) * num_dags(n - k) for k in range(1, n))
+    return sum(((-1)**(k + 1)) * comb(n, k) * (2 ** (k * (n - k))) * num_dags(n - k) for k in range(1, n + 1))
 
 def _arity(var: str) -> int:
     """
@@ -73,8 +73,8 @@ def k2_metric(model: dict, data: pd.DataFrame) -> float:
     """
     adjmat = model["adjmat"]
     return log(1 / num_dags(len(data.columns))) + sum(
-        _k2_node_score(var, _get_parents(adjmat, var), data)
-        for var in data.columns
+        _k2_node_score(var, _get_parents(adjmat, var), dataset)
+        for var in dataset.columns
     )
 
 if __name__ == "__main__":
