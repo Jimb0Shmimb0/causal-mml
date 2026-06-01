@@ -1,0 +1,4 @@
+scipy
+numpy
+pandas~=3.0.3
+bnlearn~=0.13.0
