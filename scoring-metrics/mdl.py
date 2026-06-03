@@ -47,7 +47,7 @@ def max_likelihood_per_var(var: str, parents: list[str], dataset: pd.DataFrame) 
 
     # Group the dataset by the parents of the variable.
     groups = dataset.groupby(parents) if parents else [(None, dataset)]
-    print(groups.size())
+
 
     for _, group in groups:
         # N(pa_i)
